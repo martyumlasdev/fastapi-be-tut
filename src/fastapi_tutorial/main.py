@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+import uvicorn
 
-app = FastAPI()
+app = FastAPI(title="FastAPI")
 
 
 class Item(BaseModel):
@@ -11,17 +12,20 @@ class Item(BaseModel):
     price: float
     tax: float | None = None
 
+
 class CreateItem(BaseModel):
     name: str
     description: str | None = None
     price: float
     tax: float | None = None
 
+
 class UpdateItem(BaseModel):
     name: str | None = None
     description: str | None = None
     price: float | None = None
-    tax: float | None = None    
+    tax: float | None = None
+
 
 fake_items_db = [
     Item(id=1, name="Foo", price=10.5, tax=1.2),
@@ -34,11 +38,13 @@ fake_items_db = [
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Hello World asdfasdf asdf"}
 
 
 @app.get("/items/")
-async def read_items(q: str | None = None, skip: int = 0, limit: int = 10) -> list[Item]:
+async def read_items(
+    q: str | None = None, skip: int = 0, limit: int = 10
+) -> list[Item]:
     if q:
         return [item for item in fake_items_db if q in item.name]
     return fake_items_db[skip:limit]
@@ -72,6 +78,7 @@ async def update_item(item_id: int, item: UpdateItem):
 
     return {"message": "Item not found"}
 
+
 @app.delete("/items/{item_id}")
 async def delete_item(item_id: int):
     for i, item in enumerate(fake_items_db):
@@ -79,3 +86,13 @@ async def delete_item(item_id: int):
             fake_items_db.pop(i)
             return {"message": "Item deleted"}
     return {"message": "Item not found"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "fastapi_tutorial.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,
+        app_dir="src",
+    )
