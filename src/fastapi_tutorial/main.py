@@ -1,6 +1,6 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
 import uvicorn
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
 
 app = FastAPI(title="FastAPI")
 
@@ -41,34 +41,34 @@ async def root():
     return {"message": "Hello World asdfasdf asdf"}
 
 
-@app.get("/items/")
+@app.get("/items/", response_model=list[Item])
 async def read_items(
     q: str | None = None, skip: int = 0, limit: int = 10
 ) -> list[Item]:
     if q:
         return [item for item in fake_items_db if q in item.name]
-    return fake_items_db[skip:limit]
+    return fake_items_db[skip : skip + limit]
 
 
-@app.get("/items/{item_id}")
-async def read_item(item_id: int, q: str = None) -> Item:
+@app.get("/items/{item_id}", response_model=Item)
+async def read_item(item_id: int) -> Item:
     for item in fake_items_db:
         if item.id == item_id:
             return item
 
-    return {"message": "Item not found"}
+    raise HTTPException(status_code=404, detail="Item not found")
 
 
-@app.post("/items/")
-async def create_item(item: CreateItem):
+@app.post("/items/", response_model=Item, status_code=status.HTTP_201_CREATED)
+async def create_item(item: CreateItem) -> Item:
     new_id = max(i.id for i in fake_items_db) + 1
     new_item = Item(id=new_id, **item.model_dump())
     fake_items_db.append(new_item)
     return new_item
 
 
-@app.put("/items/{item_id}")
-async def update_item(item_id: int, item: UpdateItem):
+@app.put("/items/{item_id}", response_model=Item)
+async def update_item(item_id: int, item: UpdateItem) -> Item:
     for existing in fake_items_db:
         if existing.id == item_id:
             data = item.model_dump(exclude_unset=True)
@@ -76,16 +76,16 @@ async def update_item(item_id: int, item: UpdateItem):
                 setattr(existing, field, value)
             return existing
 
-    return {"message": "Item not found"}
+    raise HTTPException(status_code=404, detail="Item not found")
 
 
-@app.delete("/items/{item_id}")
-async def delete_item(item_id: int):
+@app.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_item(item_id: int) -> None:
     for i, item in enumerate(fake_items_db):
         if item.id == item_id:
             fake_items_db.pop(i)
-            return {"message": "Item deleted"}
-    return {"message": "Item not found"}
+            return
+    raise HTTPException(status_code=404, detail="Item not found")
 
 
 if __name__ == "__main__":
