@@ -1,28 +1,27 @@
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
-class Item(BaseModel):
+class Post(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int | None = None
-    name: str
-    description: str | None = None
-    price: float
-    tax: float | None = None
+    title: str
+    content: str
+    published: bool = True
 
 
-class CreateItem(BaseModel):
-    name: str
-    description: str | None = None
-    price: float
-    tax: float | None = None
+class CreatePost(BaseModel):
+    title: str
+    content: str
+    published: bool = True
 
 
-class UpdateItem(BaseModel):
-    name: str | None = None
-    description: str | None = None
-    price: float | None = None
-    tax: float | None = None
+class UpdatePost(BaseModel):
+    title: str | None = None
+    content: str | None = None
+    published: bool | None = None
 
 
 class SuccessResponse(BaseModel):
