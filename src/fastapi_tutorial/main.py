@@ -3,11 +3,13 @@ from fastapi import FastAPI
 
 from fastapi_tutorial.db import Base, engine
 from fastapi_tutorial.routers.posts import router as posts_router
+from fastapi_tutorial.routers.users import router as users_router
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="FastAPI")
 app.include_router(posts_router)
+app.include_router(users_router)
 
 
 @app.get("/")
