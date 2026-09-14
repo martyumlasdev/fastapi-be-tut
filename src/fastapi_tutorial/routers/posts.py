@@ -3,8 +3,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from fastapi_tutorial.db import get_db
-from fastapi_tutorial.models import Post as PostModel
-from fastapi_tutorial.schema import CreatePost, Post, UpdatePost
+from fastapi_tutorial.models import Post as PostModel, User as UserModel
+from fastapi_tutorial.schema import CreatePost, Post, UpdatePost, User
 
 router = APIRouter(prefix="/posts", tags=["posts"])
 
@@ -31,8 +31,14 @@ def read_post(post_id: int, db: Session = Depends(get_db)) -> Post:
 
 
 @router.post("/", response_model=Post, status_code=status.HTTP_201_CREATED)
-def create_post(post: CreatePost, db: Session = Depends(get_db)) -> Post:
-    new_post = PostModel(**post.model_dump())
+def create_post(post: CreatePost, user_id: int, db: Session = Depends(get_db)) -> Post:
+
+    user = db.get(UserModel, user_id)
+
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    new_post = PostModel(**post.model_dump(), user_id=user_id)
+    new_post.user = user
     db.add(new_post)
     db.commit()
     db.refresh(new_post)

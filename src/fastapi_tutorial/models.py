@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from fastapi_tutorial.db import Base
 
@@ -11,10 +12,23 @@ class Post(Base):
     content: Mapped[str]
     published: Mapped[bool] = mapped_column(default=True)
 
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id")
+    )
+
+    user: Mapped["User"] = relationship(
+        back_populates="posts"
+    )
 class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    first_name: Mapped[str] = mapped_column(index=True)
+    last_name: Mapped[str] = mapped_column(index=True)
     email: Mapped[str] = mapped_column(unique=True, index=True)
     password: Mapped[str]
     is_active: Mapped[bool] = mapped_column(default=True)
+
+    posts: Mapped[list["Post"]] = relationship(
+        back_populates="user"
+    )
