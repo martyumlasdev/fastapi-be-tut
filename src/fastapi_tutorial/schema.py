@@ -3,27 +3,6 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 
-class Post(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int | None = None
-    title: str
-    content: str
-    published: bool = True
-
-
-class CreatePost(BaseModel):
-    title: str
-    content: str
-    published: bool = True
-
-
-class UpdatePost(BaseModel):
-    title: str | None = None
-    content: str | None = None
-    published: bool | None = None
-
-
 class User(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -46,11 +25,32 @@ class UpdateUser(BaseModel):
     is_active: bool | None = None
 
 
-class SuccessResponse(BaseModel):
-    message: str = "Success"
-    data: Any = None
+class UserSummary(BaseModel):
+    id: int
+    email: str
+
+    model_config = ConfigDict(from_attributes=True)
+    
+class Post(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int | None = None
+    title: str
+    content: str
+    published: bool = True
+    user: UserSummary
+    
 
 
-class ErrorResponse(BaseModel):
-    message: str = "Request failed"
-    detail: Any = None
+class CreatePost(BaseModel):
+    title: str
+    content: str
+    published: bool = True
+    user_id: int
+
+class UpdatePost(BaseModel):
+    title: str | None = None
+    content: str | None = None
+    published: bool | None = None
+
+

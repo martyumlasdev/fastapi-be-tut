@@ -1,7 +1,11 @@
-1. routers/                
-2. users CRUD
-3. relationships  ← do this now
-4. authentication
-5. services/business logic
-6. Alembic migrations
-7. async SQLAlchemy
+1. Routers ✅
+2. Users CRUD ✅
+3. Relationships ← we're here
+4. Dependencies / Depends()
+5. Authentication & authorization
+6. Annotated + dependency patterns
+7. core/config.py — application configuration/settings
+8. Services / business logic layer
+9. Lifespan / startup & shutdown
+10. Alembic migrations
+11. Async SQLAlchemy
