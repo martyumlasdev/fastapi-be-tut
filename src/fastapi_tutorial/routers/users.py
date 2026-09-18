@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -31,7 +33,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)) -> User:
 
 
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
-def create_user(user: CreateUser, db: Session = Depends(get_db)) -> User:
+def create_user(user: CreateUser, db: Annotated[Session, Depends(get_db)],) -> User:
     existing = db.scalar(select(UserModel).where(UserModel.email == user.email))
     if existing is not None:
         raise HTTPException(status_code=409, detail="Email already registered")

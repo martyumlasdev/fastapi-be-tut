@@ -3,23 +3,33 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from fastapi_tutorial.db import get_db
+from fastapi_tutorial.dependencies import get_current_page, get_pagination
 from fastapi_tutorial.models import Post as PostModel, User as UserModel
-from fastapi_tutorial.schema import CreatePost, Post, UpdatePost, User
+from fastapi_tutorial.schema import CreatePost, PaginatedPosts, Post, UpdatePost
 
 router = APIRouter(prefix="/posts", tags=["posts"])
 
 
-@router.get("/", response_model=list[Post])
+@router.get("/", response_model=PaginatedPosts)
 def read_posts(
     q: str | None = None,
-    skip: int = 0,
-    limit: int = 10,
     db: Session = Depends(get_db),
-) -> list[Post]:
+    pagination: dict = Depends(get_pagination),
+    page: int = Depends(get_current_page),
+) -> PaginatedPosts:
     query = select(PostModel)
     if q:
         query = query.where(PostModel.title.contains(q))
-    return list(db.scalars(query.offset(skip).limit(limit)))
+    posts = list(
+        db.scalars(query.offset(pagination["skip"]).limit(pagination["limit"]))
+    )
+
+    return {
+        "page": page,
+        "skip": pagination["skip"],
+        "limit": pagination["limit"],
+        "posts": posts,
+    }
 
 
 @router.get("/{post_id}", response_model=Post)
@@ -31,13 +41,12 @@ def read_post(post_id: int, db: Session = Depends(get_db)) -> Post:
 
 
 @router.post("/", response_model=Post, status_code=status.HTTP_201_CREATED)
-def create_post(post: CreatePost, user_id: int, db: Session = Depends(get_db)) -> Post:
+def create_post(post: CreatePost, db: Session = Depends(get_db)) -> Post:
 
     user = db.get(UserModel, post.user_id)
 
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    # new_post = PostModel(**post.model_dump(), user_id=user_id)
     new_post = PostModel(
         title=post.title,
         content=post.content,

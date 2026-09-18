@@ -1,5 +1,3 @@
-from typing import Any
-
 from pydantic import BaseModel, ConfigDict
 
 
@@ -30,7 +28,8 @@ class UserSummary(BaseModel):
     email: str
 
     model_config = ConfigDict(from_attributes=True)
-    
+
+
 class Post(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -39,7 +38,13 @@ class Post(BaseModel):
     content: str
     published: bool = True
     user: UserSummary
-    
+
+
+class PaginatedPosts(BaseModel):
+    page: int
+    skip: int
+    limit: int
+    posts: list[Post]
 
 
 class CreatePost(BaseModel):
@@ -48,9 +53,8 @@ class CreatePost(BaseModel):
     published: bool = True
     user_id: int
 
+
 class UpdatePost(BaseModel):
     title: str | None = None
     content: str | None = None
     published: bool | None = None
-
-
