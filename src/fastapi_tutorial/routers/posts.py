@@ -7,11 +7,14 @@ from fastapi_tutorial.dependencies import (
     get_current_page,
     get_current_user,
     get_pagination,
+    verify_api_key,
 )
-from fastapi_tutorial.models import Post as PostModel, User as UserModel
+from fastapi_tutorial.models import Post as PostModel
+from fastapi_tutorial.models import User as UserModel
 from fastapi_tutorial.schema import CreatePost, PaginatedPosts, Post, UpdatePost
 
-router = APIRouter(prefix="/posts", tags=["posts"])
+# dependencies on route level, so all endpoints in this router will require the API key
+router = APIRouter(prefix="/posts", tags=["posts"], dependencies=[Depends(verify_api_key)])
 
 
 @router.get("/", response_model=PaginatedPosts)
