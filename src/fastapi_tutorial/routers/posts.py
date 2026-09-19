@@ -3,7 +3,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from fastapi_tutorial.db import get_db
-from fastapi_tutorial.dependencies import get_current_page, get_pagination
+from fastapi_tutorial.dependencies import (
+    get_current_page,
+    get_current_user,
+    get_pagination,
+)
 from fastapi_tutorial.models import Post as PostModel, User as UserModel
 from fastapi_tutorial.schema import CreatePost, PaginatedPosts, Post, UpdatePost
 
@@ -30,14 +34,6 @@ def read_posts(
         "limit": pagination["limit"],
         "posts": posts,
     }
-
-
-@router.get("/{post_id}", response_model=Post)
-def read_post(post_id: int, db: Session = Depends(get_db)) -> Post:
-    post = db.get(PostModel, post_id)
-    if post is None:
-        raise HTTPException(status_code=404, detail="Post not found")
-    return post
 
 
 @router.post("/", response_model=Post, status_code=status.HTTP_201_CREATED)
@@ -80,3 +76,19 @@ def delete_post(post_id: int, db: Session = Depends(get_db)) -> None:
         raise HTTPException(status_code=404, detail="Post not found")
     db.delete(post)
     db.commit()
+
+
+@router.get("/my-posts")
+def read_my_posts(
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return current_user.posts
+
+
+@router.get("/{post_id}", response_model=Post)
+def read_post(post_id: int, db: Session = Depends(get_db)) -> Post:
+    post = db.get(PostModel, post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return post
