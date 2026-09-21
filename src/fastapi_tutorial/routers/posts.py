@@ -14,7 +14,11 @@ from fastapi_tutorial.models import User as UserModel
 from fastapi_tutorial.schema import CreatePost, PaginatedPosts, Post, UpdatePost
 
 # dependencies on route level, so all endpoints in this router will require the API key
-router = APIRouter(prefix="/posts", tags=["posts"], dependencies=[Depends(verify_api_key)])
+router = APIRouter(
+    prefix="/posts",
+    tags=["posts"], 
+    # dependencies=[Depends(verify_api_key)]
+)
 
 
 @router.get("/", response_model=PaginatedPosts)
@@ -40,19 +44,23 @@ def read_posts(
 
 
 @router.post("/", response_model=Post, status_code=status.HTTP_201_CREATED)
-def create_post(post: CreatePost, db: Session = Depends(get_db)) -> Post:
+def create_post(
+    post: CreatePost,
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> Post:
 
-    user = db.get(UserModel, post.user_id)
+    # user = db.get(UserModel, post.user_id)
 
-    if user is None:
+    if current_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     new_post = PostModel(
         title=post.title,
         content=post.content,
         published=post.published,
-        user=user,
+        user=current_user,
     )
-    new_post.user = user
+    new_post.user = current_user
     db.add(new_post)
     db.commit()
     db.refresh(new_post)

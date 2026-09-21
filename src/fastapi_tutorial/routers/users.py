@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi_tutorial.db import get_db
 from fastapi_tutorial.models import User as UserModel
 from fastapi_tutorial.schema import CreateUser, UpdateUser, User
+from fastapi_tutorial.security import get_password_hash
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -33,12 +34,18 @@ def read_user(user_id: int, db: Session = Depends(get_db)) -> User:
 
 
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
-def create_user(user: CreateUser, db: Annotated[Session, Depends(get_db)],) -> User:
+def create_user(
+    user: CreateUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> User:
+    
     existing = db.scalar(select(UserModel).where(UserModel.email == user.email))
     if existing is not None:
         raise HTTPException(status_code=409, detail="Email already registered")
 
-    new_user = UserModel(**user.model_dump())
+    user_data = user.model_dump(exclude={"password"})
+    user_data["password_hash"] = get_password_hash(user.password)
+    new_user = UserModel(**user_data)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -60,6 +67,9 @@ def update_user(user_id: int, user: UpdateUser, db: Session = Depends(get_db)) -
         )
         if email_owner is not None:
             raise HTTPException(status_code=409, detail="Email already registered")
+
+    if "password" in updates:
+        updates["password_hash"] = get_password_hash(updates.pop("password"))
 
     for field, value in updates.items():
         setattr(existing, field, value)

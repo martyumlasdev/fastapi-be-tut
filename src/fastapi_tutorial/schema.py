@@ -51,7 +51,7 @@ class CreatePost(BaseModel):
     title: str
     content: str
     published: bool = True
-    user_id: int
+    # user_id: int
 
 
 class UpdatePost(BaseModel):
