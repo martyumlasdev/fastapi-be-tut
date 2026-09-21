@@ -26,7 +26,7 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(index=True)
     last_name: Mapped[str] = mapped_column(index=True)
     email: Mapped[str] = mapped_column(unique=True, index=True)
-    password: Mapped[str]
+    password_hash: Mapped[str]
     is_active: Mapped[bool] = mapped_column(default=True)
 
     posts: Mapped[list["Post"]] = relationship(
