@@ -2,8 +2,8 @@
 2. Users CRUD ✅
 3. Relationships ✅
 4. Dependencies / Depends() ✅
-5. Authentication & authorization ← we're here
-6. Annotated + dependency patterns
+5. Authentication & authorization ✅
+6. Annotated + dependency patterns ← we're here
 7. core/config.py — application configuration/settings
 8. Services / business logic layer
 9. Lifespan / startup & shutdown

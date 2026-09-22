@@ -7,7 +7,6 @@ from fastapi_tutorial.dependencies import (
     get_current_page,
     get_current_user,
     get_pagination,
-    verify_api_key,
 )
 from fastapi_tutorial.models import Post as PostModel
 from fastapi_tutorial.models import User as UserModel
@@ -68,10 +67,17 @@ def create_post(
 
 
 @router.put("/{post_id}", response_model=Post)
-def update_post(post_id: int, post: UpdatePost, db: Session = Depends(get_db)) -> Post:
+def update_post(
+    post_id: int,
+    post: UpdatePost,
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Post:
     existing = db.get(PostModel, post_id)
     if existing is None:
         raise HTTPException(status_code=404, detail="Post not found")
+    if existing.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to modify this post")
 
     for field, value in post.model_dump(exclude_unset=True).items():
         setattr(existing, field, value)
@@ -81,10 +87,16 @@ def update_post(post_id: int, post: UpdatePost, db: Session = Depends(get_db)) -
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(post_id: int, db: Session = Depends(get_db)) -> None:
+def delete_post(
+    post_id: int,
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
     post = db.get(PostModel, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this post")
     db.delete(post)
     db.commit()
 
