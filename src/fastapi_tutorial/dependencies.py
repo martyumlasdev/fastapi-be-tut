@@ -65,3 +65,7 @@ def verify_api_key(
             status_code=401,
             detail="Invalid API key",
         )
+
+CurrentUser = Annotated[User, Depends(get_current_user)]
+
+DBSession = Annotated[Session, Depends(get_db)]

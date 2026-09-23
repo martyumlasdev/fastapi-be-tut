@@ -1,9 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from fastapi_tutorial.db import get_db
 from fastapi_tutorial.dependencies import (
+    CurrentUser,
+    DBSession,
     get_current_page,
     get_current_user,
     get_pagination,
@@ -15,18 +19,23 @@ from fastapi_tutorial.schema import CreatePost, PaginatedPosts, Post, UpdatePost
 # dependencies on route level, so all endpoints in this router will require the API key
 router = APIRouter(
     prefix="/posts",
-    tags=["posts"], 
+    tags=["posts"],
     # dependencies=[Depends(verify_api_key)]
 )
 
 
 @router.get("/", response_model=PaginatedPosts)
 def read_posts(
-    q: str | None = None,
-    db: Session = Depends(get_db),
-    pagination: dict = Depends(get_pagination),
-    page: int = Depends(get_current_page),
+    db: DBSession,
+    q: Annotated[str | None, Query(description="Search posts by title")] = None,
+    pagination: Annotated[dict | None, Depends(get_pagination)] = None,
+    page: Annotated[int | None, Depends(get_current_page)] = None,
 ) -> PaginatedPosts:
+    if pagination is None:
+        pagination = get_pagination()
+    if page is None:
+        page = get_current_page(pagination)
+
     query = select(PostModel)
     if q:
         query = query.where(PostModel.title.contains(q))
@@ -45,8 +54,8 @@ def read_posts(
 @router.post("/", response_model=Post, status_code=status.HTTP_201_CREATED)
 def create_post(
     post: CreatePost,
-    current_user: UserModel = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: CurrentUser,
+    db: DBSession,
 ) -> Post:
 
     # user = db.get(UserModel, post.user_id)
@@ -70,14 +79,16 @@ def create_post(
 def update_post(
     post_id: int,
     post: UpdatePost,
-    current_user: UserModel = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: CurrentUser,
+    db: DBSession,
 ) -> Post:
     existing = db.get(PostModel, post_id)
     if existing is None:
         raise HTTPException(status_code=404, detail="Post not found")
     if existing.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to modify this post")
+        raise HTTPException(
+            status_code=403, detail="Not authorized to modify this post"
+        )
 
     for field, value in post.model_dump(exclude_unset=True).items():
         setattr(existing, field, value)
@@ -89,28 +100,30 @@ def update_post(
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(
     post_id: int,
-    current_user: UserModel = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: CurrentUser,
+    db: DBSession,
 ) -> None:
     post = db.get(PostModel, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
     if post.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to delete this post")
+        raise HTTPException(
+            status_code=403, detail="Not authorized to delete this post"
+        )
     db.delete(post)
     db.commit()
 
 
 @router.get("/my-posts")
 def read_my_posts(
-    current_user: UserModel = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: CurrentUser,
+    db: DBSession,
 ):
     return current_user.posts
 
 
 @router.get("/{post_id}", response_model=Post)
-def read_post(post_id: int, db: Session = Depends(get_db)) -> Post:
+def read_post(post_id: int, db: DBSession) -> Post:
     post = db.get(PostModel, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
