@@ -6,11 +6,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from fastapi_tutorial.core.config import settings
 from fastapi_tutorial.db import get_db
 from fastapi_tutorial.dependencies import DBSession
 from fastapi_tutorial.models import User
 from fastapi_tutorial.security import (
-    ACCESS_TOKEN_EXPIRE_MINUTES,
     create_access_token,
     verify_password,
 )
@@ -48,7 +48,7 @@ def login(
     access_token = create_access_token(
         data={"sub": str(user.id)},
         expires_delta=timedelta(
-            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         ),
     )
 

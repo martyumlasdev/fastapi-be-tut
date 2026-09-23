@@ -6,9 +6,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from sqlalchemy.orm import Session
 
+from fastapi_tutorial.core.config import settings
 from fastapi_tutorial.db import get_db
 from fastapi_tutorial.models import User
-from fastapi_tutorial.security import ALGORITHM, SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -37,8 +37,8 @@ def get_current_user(
     try:
         payload = jwt.decode(
             token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM],
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
         )
 
         user_id = payload.get("sub")
@@ -65,6 +65,7 @@ def verify_api_key(
             status_code=401,
             detail="Invalid API key",
         )
+
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 

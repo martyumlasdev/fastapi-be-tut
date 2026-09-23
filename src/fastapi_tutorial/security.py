@@ -3,9 +3,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from pwdlib import PasswordHash
 
-SECRET_KEY = "153f30c0fb43474e5eb9013a8e2dd7167919aa360956e6f16b696cc030df2010"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from fastapi_tutorial.core.config import settings
 
 password_hash = PasswordHash.recommended()
 
@@ -40,6 +38,6 @@ def create_access_token(
 
     return jwt.encode(
         to_encode,
-        SECRET_KEY,
-        algorithm=ALGORITHM,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
     )
