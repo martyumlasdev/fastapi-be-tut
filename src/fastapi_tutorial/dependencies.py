@@ -13,12 +13,16 @@ from fastapi_tutorial.models import User
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-def get_pagination(skip: int = 0, limit: int = Query(default=10, le=100)):
+def get_pagination(
+        skip: int = 0, 
+        limit: int = Query(default=10, le=100)
+    ):
+    
     return {"skip": skip, "limit": limit}
 
 
 def get_current_page(
-    pagination: dict = Depends(get_pagination),
+    pagination: Annotated[dict, Depends(get_pagination)],
 ):
     return pagination["skip"] // pagination["limit"] + 1
 
@@ -68,5 +72,5 @@ def verify_api_key(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
-
 DBSession = Annotated[Session, Depends(get_db)]
+Pagination = Annotated[dict, Depends(get_pagination)]
