@@ -12,7 +12,7 @@ from fastapi_tutorial.routers import api_router
 async def lifespan(app: FastAPI):
     print("Application starting...")
 
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
 
     yield
 

@@ -1,4 +1,4 @@
-from collections.abc import AsyncGenerator
+# from collections.abc import AsyncGenerator
 
 from sqlalchemy import create_engine
 

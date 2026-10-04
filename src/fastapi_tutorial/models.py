@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,6 +21,8 @@ class Post(Base):
     user: Mapped["User"] = relationship(
         back_populates="posts"
     )
+
+    created_at: Mapped[datetime]
 class User(Base):
     __tablename__ = "users"
 

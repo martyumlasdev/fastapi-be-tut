@@ -6,10 +6,11 @@
 6.  Annotated + dependency patterns     ✅
 7.  core/config.py                      ✅
 8.  Services / business logic           ✅
-9.  Frontend integration                ← ADD HERE
-10. Lifespan / startup & shutdown
-11. Alembic migrations
-12. Async SQLAlchemy
+9.  Frontend integration                ✅
+10. Lifespan / startup & shutdown       ✅
+11. Alembic migrations          
+12. Seeders & factories            
+13. Async SQLAlchemy
 
 running the app in terminal
 ```bash
