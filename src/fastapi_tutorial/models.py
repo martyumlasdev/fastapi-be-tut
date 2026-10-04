@@ -14,13 +14,9 @@ class Post(Base):
     content: Mapped[str]
     published: Mapped[bool] = mapped_column(default=True)
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id")
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
-    user: Mapped["User"] = relationship(
-        back_populates="posts"
-    )
+    user: Mapped["User"] = relationship(back_populates="posts")
 
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
@@ -35,6 +31,4 @@ class User(Base):
     password_hash: Mapped[str]
     is_active: Mapped[bool] = mapped_column(default=True)
 
-    posts: Mapped[list["Post"]] = relationship(
-        back_populates="user"
-    )
+    posts: Mapped[list["Post"]] = relationship(back_populates="user")
