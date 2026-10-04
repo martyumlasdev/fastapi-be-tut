@@ -1,13 +1,26 @@
+from contextlib import asynccontextmanager
+
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi_tutorial.db import Base, engine
 from fastapi_tutorial.routers import api_router
-from fastapi.middleware.cors import CORSMiddleware
 
-Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="FastAPI")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Application starting...")
+
+    Base.metadata.create_all(bind=engine)
+
+    yield
+
+    print("Application shutting down...")
+
+# Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="FastAPI", lifespan=lifespan)
 app.include_router(api_router)
 
 app.add_middleware(
@@ -17,6 +30,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World asdfasdf asdf"}
