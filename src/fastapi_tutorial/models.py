@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from fastapi_tutorial.db import Base
@@ -22,7 +22,9 @@ class Post(Base):
         back_populates="posts"
     )
 
-    created_at: Mapped[datetime]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
 class User(Base):
     __tablename__ = "users"
 
