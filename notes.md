@@ -15,3 +15,40 @@
 running the app in terminal
 ```bash
 uvicorn fastapi_tutorial.main:app --reload --host 127.0.0.1 --port 8001
+
+
+Seeders & Factories              ← NEXT
+        ↓
+File Uploads
+        ↓
+Email Infrastructure
+        ↓
+Email Verification
+        ↓
+Password Reset
+        ↓
+Background Tasks
+        ↓
+Task Queues / Workers
+        ↓
+Notifications
+        ↓
+Rate Limiting
+        ↓
+Caching
+        ↓
+WebSockets
+        ↓
+Testing
+        ↓
+Logging / Error Handling
+        ↓
+API Documentation
+        ↓
+Security Hardening
+        ↓
+Docker
+        ↓
+Production / AWS
+        ↓
+Async SQLAlchemy

@@ -1,3 +1,5 @@
+import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -38,6 +40,7 @@ class Post(BaseModel):
     content: str
     published: bool = True
     user: UserSummary
+    created_at: datetime.datetime | None = None
 
 
 class PaginatedPosts(BaseModel):
