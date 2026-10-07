@@ -1,9 +1,7 @@
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from faker import Faker
 
-from fastapi_tutorial.db import SessionLocal
-from fastapi_tutorial.models import Post, Tag, User
 from fastapi_tutorial.security import get_password_hash
+from fastapi_tutorial.db import SessionLocal
 from fastapi_tutorial.seed.factories import (
     create_post,
     create_tag,
@@ -11,81 +9,8 @@ from fastapi_tutorial.seed.factories import (
 )
 
 
-def get_or_create_user(
-    db: Session,
-    *,
-    first_name: str,
-    last_name: str,
-    email: str,
-    password_hash: str,
-) -> User:
-    user = db.scalar(
-        select(User).where(User.email == email)
-    )
-
-    if user:
-        return user
-
-    return create_user(
-        db,
-        first_name=first_name,
-        last_name=last_name,
-        email=email,
-        password_hash=password_hash,
-    )
-
-
-def get_or_create_tag(
-    db: Session,
-    *,
-    name: str,
-) -> Tag:
-    tag = db.scalar(
-        select(Tag).where(Tag.name == name)
-    )
-
-    if tag:
-        return tag
-
-    return create_tag(
-        db,
-        name=name,
-    )
-
-
-def get_or_create_post(
-    db: Session,
-    *,
-    title: str,
-    content: str,
-    user_id: int,
-    published: bool = True,
-) -> Post:
-    post = db.scalar(
-        select(Post).where(
-            Post.title == title,
-            Post.user_id == user_id,
-        )
-    )
-
-    if post:
-        return post
-
-    return create_post(
-        db,
-        title=title,
-        content=content,
-        user_id=user_id,
-        published=published,
-    )
-
-
-def add_tag_to_post(
-    post: Post,
-    tag: Tag,
-) -> None:
-    if tag not in post.tags:
-        post.tags.append(tag)
+fake = Faker()
+fake.seed_instance(12345)
 
 
 def seed_database() -> None:
@@ -96,85 +21,92 @@ def seed_database() -> None:
         # Users
         # ---------------------------------------------------------
 
-        user1 = get_or_create_user(
-            db,
-            first_name="John",
-            last_name="Doe",
-            email="john@example.com",
-            password_hash=get_password_hash("password"),
-        )
+        users = []
 
-        user2 = get_or_create_user(
-            db,
-            first_name="Jane",
-            last_name="Doe",
-            email="jane@example.com",
-            password_hash=get_password_hash("password"),
-        )
+        for _ in range(20):
+            user = create_user(
+                db,
+                first_name=fake.first_name(),
+                last_name=fake.last_name(),
+                email=fake.unique.email(),
+                password_hash=get_password_hash("password"),
+            )
+
+            users.append(user)
 
         # ---------------------------------------------------------
         # Tags
         # ---------------------------------------------------------
 
-        python_tag = get_or_create_tag(
-            db,
-            name="Python",
-        )
+        tag_names = [
+            "Python",
+            "FastAPI",
+            "SQLAlchemy",
+            "Docker",
+            "AWS",
+            "Testing",
+            "Backend",
+            "API",
+            "Programming",
+            "Web Development",
+        ]
 
-        fastapi_tag = get_or_create_tag(
-            db,
-            name="FastAPI",
-        )
+        tags = []
 
-        sqlalchemy_tag = get_or_create_tag(
-            db,
-            name="SQLAlchemy",
-        )
+        for name in tag_names:
+            tag = create_tag(
+                db,
+                name=name,
+            )
+
+            tags.append(tag)
 
         # ---------------------------------------------------------
         # Posts
         # ---------------------------------------------------------
 
-        post1 = get_or_create_post(
-            db,
-            title="Learning FastAPI",
-            content="Building APIs with FastAPI.",
-            user_id=user1.id,
-        )
+        posts = []
 
-        post2 = get_or_create_post(
-            db,
-            title="Learning SQLAlchemy",
-            content="Working with SQLAlchemy ORM.",
-            user_id=user1.id,
-        )
+        for _ in range(1_000):
+            user = fake.random_element(users)
 
-        post3 = get_or_create_post(
-            db,
-            title="Python Type Hints",
-            content="Understanding Python type hints.",
-            user_id=user2.id,
-        )
+            post = create_post(
+                db,
+                title=fake.sentence(nb_words=6),
+                content=fake.paragraph(nb_sentences=5),
+                user_id=user.id,
+            )
+
+            posts.append(post)
 
         # ---------------------------------------------------------
         # Post ↔ Tag relationships
         # ---------------------------------------------------------
 
-        add_tag_to_post(post1, python_tag)
-        add_tag_to_post(post1, fastapi_tag)
+        for post in posts:
+            number_of_tags = fake.random_int(
+                min=1,
+                max=3,
+            )
 
-        add_tag_to_post(post2, python_tag)
-        add_tag_to_post(post2, sqlalchemy_tag)
+            post_tags = fake.random_elements(
+                elements=tags,
+                length=number_of_tags,
+                unique=True,
+            )
 
-        add_tag_to_post(post3, python_tag)
+            post.tags.extend(post_tags)
 
         # ---------------------------------------------------------
-        # Commit
+        # Commit everything
         # ---------------------------------------------------------
 
         db.commit()
 
         print("Database seeded successfully.")
+        print(f"Users: {len(users)}")
+        print(f"Tags: {len(tags)}")
+        print(f"Posts: {len(posts)}")
 
     except Exception:
         db.rollback()
