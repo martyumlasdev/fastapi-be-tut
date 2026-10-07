@@ -1,13 +1,13 @@
 from faker import Faker
 
-from fastapi_tutorial.security import get_password_hash
 from fastapi_tutorial.db import SessionLocal
+from fastapi_tutorial.models import Post
+from fastapi_tutorial.security import get_password_hash
 from fastapi_tutorial.seed.factories import (
     create_post,
     create_tag,
     create_user,
 )
-
 
 fake = Faker()
 fake.seed_instance(12345)
@@ -65,19 +65,24 @@ def seed_database() -> None:
         # Posts
         # ---------------------------------------------------------
 
+                # Posts
         posts = []
 
         for _ in range(1_000):
             user = fake.random_element(users)
 
-            post = create_post(
-                db,
+            post = Post(
                 title=fake.sentence(nb_words=6),
                 content=fake.paragraph(nb_sentences=5),
+                published=True,
                 user_id=user.id,
             )
 
+            db.add(post)
             posts.append(post)
+
+        # Flush once so all posts are synchronized with the database.
+        db.flush()
 
         # ---------------------------------------------------------
         # Post ↔ Tag relationships
