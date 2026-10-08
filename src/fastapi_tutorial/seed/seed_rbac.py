@@ -1,6 +1,6 @@
 from fastapi_tutorial.core.rbac import sync_permissions
 from fastapi_tutorial.db import SessionLocal
-from fastapi_tutorial.models import Role, User
+from fastapi_tutorial.models import Permission, Role, User
 from fastapi_tutorial.security import get_password_hash
 
 INITIAL_ROLES = {
@@ -79,10 +79,12 @@ def seed_rbac() -> None:
 
         roles = seed_roles(db)
 
-        admin = seed_admin_user(
-            db,
+        assign_admin_permissions(
             roles["admin"],
+            permissions,
         )
+
+        admin = seed_admin_user(db, roles["admin"])
 
         db.commit()
 
@@ -98,6 +100,19 @@ def seed_rbac() -> None:
     finally:
         db.close()
 
+
+def assign_admin_permissions(
+    admin_role: Role,
+    permissions: dict[str, Permission],
+) -> None:
+    existing_permissions = {
+        permission.name
+        for permission in admin_role.permissions
+    }
+
+    for permission in permissions.values():
+        if permission.name not in existing_permissions:
+            admin_role.permissions.append(permission)
 
 if __name__ == "__main__":
     seed_rbac()

@@ -148,4 +148,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if args.post_count < 1:
+        parser.error("post_count must be greater than 0")
+
     seed_database(args.post_count)

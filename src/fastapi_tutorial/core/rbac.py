@@ -1,7 +1,9 @@
 from enum import StrEnum
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import DeclarativeBase, Session
 
+from fastapi_tutorial.dependencies import CurrentUser
 from fastapi_tutorial.models import Permission
 
 
@@ -67,6 +69,7 @@ def get_rbac_resources(
 
 
 def sync_permissions(db: Session) -> dict[str, Permission]:
+    
     """
     Create missing permissions discovered from RBAC resources.
 
@@ -102,3 +105,19 @@ def sync_permissions(db: Session) -> dict[str, Permission]:
     db.flush()
 
     return permissions
+
+def require_permission(permission_name: str):
+    def dependency(
+        current_user: CurrentUser,
+    ):
+        for role in current_user.roles:
+            for permission in role.permissions:
+                if permission.name == permission_name:
+                    return current_user
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission denied",
+        )
+
+    return dependency
