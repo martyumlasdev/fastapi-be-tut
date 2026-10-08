@@ -5,7 +5,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from fastapi_tutorial.db import Base
 
-
 # ============================================================
 # Association Tables
 # ============================================================
@@ -66,6 +65,8 @@ role_permissions = Table(
 class User(Base):
     __tablename__ = "users"
 
+    __rbac_resource__ = "user"
+
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
     first_name: Mapped[str] = mapped_column(index=True)
@@ -91,8 +92,10 @@ class User(Base):
 
 
 class Post(Base):
-    __tablename__ = "posts"
+    __tablename__ = "posts" 
 
+    __rbac_resource__ = "post"
+    
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
     title: Mapped[str] = mapped_column(index=True)
@@ -120,6 +123,8 @@ class Post(Base):
 
 class Tag(Base):
     __tablename__ = "tags"
+
+    __rbac_resource__ = "tag"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 

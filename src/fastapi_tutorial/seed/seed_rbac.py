@@ -1,8 +1,7 @@
-from fastapi_tutorial.core.security import get_password_hash
-
-from fastapi_tutorial.core.permissions import PERMISSIONS
+from fastapi_tutorial.core.rbac import sync_permissions
 from fastapi_tutorial.db import SessionLocal
-from fastapi_tutorial.models import Permission, Role, User
+from fastapi_tutorial.models import Role, User
+from fastapi_tutorial.security import get_password_hash
 
 INITIAL_ROLES = {
     "user": "Regular application user",
@@ -18,34 +17,8 @@ ADMIN_USER = {
 }
 
 
-def seed_permissions(db):
-    """Create application permissions that don't exist yet."""
-
-    permissions = {}
-
-    for name, description in PERMISSIONS.items():
-        permission = (
-            db.query(Permission)
-            .filter_by(name=name)
-            .first()
-        )
-
-        if permission is None:
-            permission = Permission(
-                name=name,
-                description=description,
-            )
-            db.add(permission)
-
-        permissions[name] = permission
-
-    db.flush()
-
-    return permissions
-
-
 def seed_roles(db):
-    """Create the initial application roles."""
+    """Create the initial application roles if they don't exist."""
 
     roles = {}
 
@@ -70,20 +43,8 @@ def seed_roles(db):
     return roles
 
 
-def seed_admin_permissions(db, roles, permissions):
-    """Give the initial admin role all known permissions."""
-
-    admin_role = roles["admin"]
-
-    for permission in permissions.values():
-        if permission not in admin_role.permissions:
-            admin_role.permissions.append(permission)
-
-    db.flush()
-
-
 def seed_admin_user(db, admin_role):
-    """Create the initial admin account."""
+    """Create the initial admin account if it doesn't exist."""
 
     admin = (
         db.query(User)
@@ -104,10 +65,8 @@ def seed_admin_user(db, admin_role):
         db.add(admin)
         db.flush()
 
-    if admin_role not in admin.roles:
         admin.roles.append(admin_role)
-
-    db.flush()
+        db.flush()
 
     return admin
 
@@ -116,15 +75,9 @@ def seed_rbac() -> None:
     db = SessionLocal()
 
     try:
-        permissions = seed_permissions(db)
+        permissions = sync_permissions(db)
 
         roles = seed_roles(db)
-
-        seed_admin_permissions(
-            db,
-            roles,
-            permissions,
-        )
 
         admin = seed_admin_user(
             db,
@@ -134,7 +87,7 @@ def seed_rbac() -> None:
         db.commit()
 
         print("RBAC data seeded successfully.")
-        print(f"Permissions: {len(permissions)}")
+        print(f"Permissions discovered: {len(permissions)}")
         print(f"Roles: {len(roles)}")
         print(f"Admin: {admin.email}")
 

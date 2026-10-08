@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 
 from fastapi_tutorial.dependencies import CurrentUser, DBSession
+from fastapi_tutorial.models import Role
 from fastapi_tutorial.models import User as UserModel
 from fastapi_tutorial.schema import CreateUser, UpdateUser, User
 from fastapi_tutorial.security import get_password_hash
@@ -40,10 +41,21 @@ def create_user(
     existing = db.scalar(select(UserModel).where(UserModel.email == user.email))
     if existing is not None:
         raise HTTPException(status_code=409, detail="Email already registered")
+    
+    user_role = db.scalar(
+        select(Role).where(Role.name == "user")
+    )
 
+    if user_role is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Default user role is not configured",
+        )
+    
     user_data = user.model_dump(exclude={"password"})
     user_data["password_hash"] = get_password_hash(user.password)
     new_user = UserModel(**user_data)
+    new_user.roles.append(user_role)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)

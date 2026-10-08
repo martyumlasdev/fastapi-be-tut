@@ -1,10 +1,12 @@
+import argparse
+
 from faker import Faker
+from sqlalchemy import select
 
 from fastapi_tutorial.db import SessionLocal
-from fastapi_tutorial.models import Post
+from fastapi_tutorial.models import Post, Role
 from fastapi_tutorial.security import get_password_hash
 from fastapi_tutorial.seed.factories import (
-    create_post,
     create_tag,
     create_user,
 )
@@ -13,14 +15,22 @@ fake = Faker()
 fake.seed_instance(12345)
 
 
-def seed_database() -> None:
+def seed_database(post_count: int) -> None:
     db = SessionLocal()
 
     try:
         # ---------------------------------------------------------
         # Users
         # ---------------------------------------------------------
+        user_role = db.scalar(
+            select(Role).where(Role.name == "user")
+        )
 
+        if user_role is None:
+            raise RuntimeError(
+                "User role not found. Run seed_rbac.py first."
+            )
+        
         users = []
 
         for _ in range(20):
@@ -31,6 +41,8 @@ def seed_database() -> None:
                 email=fake.unique.email(),
                 password_hash=get_password_hash("password"),
             )
+
+            user.roles.append(user_role)
 
             users.append(user)
 
@@ -68,7 +80,7 @@ def seed_database() -> None:
                 # Posts
         posts = []
 
-        for _ in range(1_000):
+        for _ in range(post_count):
             user = fake.random_element(users)
 
             post = Post(
@@ -122,4 +134,18 @@ def seed_database() -> None:
 
 
 if __name__ == "__main__":
-    seed_database()
+    parser = argparse.ArgumentParser(
+        description="Seed the development database."
+    )
+
+    parser.add_argument(
+        "post_count",
+        type=int,
+        nargs="?",
+        default=1000,
+        help="Number of posts to create (default: 1000)",
+    )
+
+    args = parser.parse_args()
+
+    seed_database(args.post_count)
