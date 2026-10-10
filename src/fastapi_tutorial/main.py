@@ -18,6 +18,7 @@ async def lifespan(app: FastAPI):
 
     print("Application shutting down...")
 
+
 # Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="FastAPI", lifespan=lifespan)

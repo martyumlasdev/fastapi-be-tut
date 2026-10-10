@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 
+from fastapi_tutorial.core.rbac import require_permission
 from fastapi_tutorial.dependencies import CurrentUser, DBSession
 from fastapi_tutorial.models import Role
 from fastapi_tutorial.models import User as UserModel
@@ -13,7 +16,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.get("/", response_model=list[User])
 def read_users(
     db: DBSession,
-    current_user: CurrentUser,
+    current_user: Annotated[CurrentUser, Depends(require_permission("user.read"))],
     q: str | None = None,
     skip: int = 0,
     limit: int = 10,
@@ -25,7 +28,7 @@ def read_users(
 
 
 @router.get("/{user_id}", response_model=User)
-def read_user(user_id: int, current_user: CurrentUser, db: DBSession) -> User:
+def read_user(user_id: int, current_user: Annotated[CurrentUser, Depends(require_permission("user.read"))], db: DBSession) -> User:
     user = db.get(UserModel, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -35,6 +38,7 @@ def read_user(user_id: int, current_user: CurrentUser, db: DBSession) -> User:
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
 def create_user(
     user: CreateUser,
+    current_user: Annotated[CurrentUser, Depends(require_permission("user.create"))],
     db: DBSession,
 ) -> User:
 
@@ -66,7 +70,7 @@ def create_user(
 def update_user(
     user_id: int,
     user: UpdateUser,
-    current_user: CurrentUser,
+    current_user: Annotated[CurrentUser, Depends(require_permission("user.update"))],
     db: DBSession,
 ) -> User:
     existing = db.get(UserModel, user_id)
@@ -94,7 +98,7 @@ def update_user(
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, current_user: CurrentUser, db: DBSession) -> None:
+def delete_user(user_id: int, current_user: Annotated[CurrentUser, Depends(require_permission("user.delete"))], db: DBSession) -> None:
     user = db.get(UserModel, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")

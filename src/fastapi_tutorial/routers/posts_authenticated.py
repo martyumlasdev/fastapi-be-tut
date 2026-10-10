@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
+from fastapi_tutorial.core.rbac import require_permission
 from fastapi_tutorial.dependencies import (
     CurrentUser,
     DBSession,
@@ -19,7 +20,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[Post])
+@router.get("/", response_model=list[Post], dependencies=[Depends(require_permission("post.read"))])
 def read_my_posts(
     current_user: CurrentUser,
     db: DBSession,
@@ -33,7 +34,7 @@ def read_my_posts(
     )
 
 
-@router.get("/{post_id}", response_model=Post)
+@router.get("/{post_id}", response_model=Post, dependencies=[Depends(require_permission("post.read"))])
 def read_my_post(
     post_id: int,
     current_user: CurrentUser,
@@ -47,7 +48,7 @@ def read_my_post(
     )
 
 
-@router.post("/", response_model=Post, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=Post, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("post.create"))])
 def create_post(
     post: CreatePost,
     current_user: CurrentUser,
@@ -56,7 +57,7 @@ def create_post(
     return create_post_service(post=post, current_user=current_user, db=db)
 
 
-@router.put("/{post_id}", response_model=Post)
+@router.put("/{post_id}", response_model=Post, dependencies=[Depends(require_permission("post.update"))])
 def update_post(
     post_id: int,
     post: UpdatePost,
