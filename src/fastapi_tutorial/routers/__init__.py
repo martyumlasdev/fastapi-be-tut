@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from fastapi_tutorial.routers.admin_rbac import router as admin_rbac_router
 from fastapi_tutorial.routers.auth import router as auth_router
 from fastapi_tutorial.routers.posts_authenticated import (
     router as authenticated_posts_router,
@@ -13,3 +14,4 @@ api_router.include_router(authenticated_posts_router)
 api_router.include_router(public_posts_router)
 api_router.include_router(users_router)
 api_router.include_router(auth_router)
+api_router.include_router(admin_rbac_router)

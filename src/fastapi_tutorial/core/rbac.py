@@ -21,6 +21,12 @@ DEFAULT_ACTIONS = {
     PermissionAction.DELETE,
 }
 
+RBAC_MANAGEMENT_PERMISSIONS = {
+    "role_permission.assign",
+    "user_role.assign",
+}
+
+
 
 def get_permission_names(
     resource: str,
@@ -69,9 +75,9 @@ def get_rbac_resources(
 
 
 def sync_permissions(db: Session) -> dict[str, Permission]:
-    
     """
-    Create missing permissions discovered from RBAC resources.
+    Create missing permissions discovered from RBAC resources
+    and RBAC management permissions.
 
     Existing permissions are never modified or deleted.
     Role-permission assignments are never changed.
@@ -79,32 +85,39 @@ def sync_permissions(db: Session) -> dict[str, Permission]:
     from fastapi_tutorial import models
     from fastapi_tutorial.db import Base
 
-    # Ensure all SQLAlchemy models have been imported
-    # before discovering registered RBAC resources.
+    # Ensure all SQLAlchemy models have been imported.
     _ = models
+
+    permission_names = {
+        name
+        for resource, actions in get_rbac_resources(Base)
+        for name in get_permission_names(resource, actions)
+    }
+
+    permission_names.update(RBAC_MANAGEMENT_PERMISSIONS)
 
     permissions = {}
 
-    for resource, actions in get_rbac_resources(Base):
-        for name in get_permission_names(resource, actions):
-            permission = (
-                db.query(Permission)
-                .filter_by(name=name)
-                .first()
+    for name in permission_names:
+        permission = (
+            db.query(Permission)
+            .filter_by(name=name)
+            .first()
+        )
+
+        if permission is None:
+            permission = Permission(
+                name=name,
+                description=f"{name.replace('.', ' ').capitalize()}",
             )
+            db.add(permission)
 
-            if permission is None:
-                permission = Permission(
-                    name=name,
-                    description=f"{name.replace('.', ' ').capitalize()}",
-                )
-                db.add(permission)
-
-            permissions[name] = permission
+        permissions[name] = permission
 
     db.flush()
 
     return permissions
+
 
 def require_permission(permission_name: str):
     def dependency(
