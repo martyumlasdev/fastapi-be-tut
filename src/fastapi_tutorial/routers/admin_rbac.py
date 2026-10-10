@@ -135,3 +135,71 @@ def remove_role_from_user(
     if role in user.roles:
         user.roles.remove(role)
         db.commit()
+
+@router.get(
+    "/",
+    dependencies=[Depends(require_permission("role.read"))],
+)
+def list_roles(db: DBSession):
+    roles = db.query(Role).order_by(Role.id).all()
+
+    return [
+        {
+            "id": role.id,
+            "name": role.name,
+            "description": role.description,
+            "permissions": [
+                {
+                    "id": permission.id,
+                    "name": permission.name,
+                    "description": permission.description,
+                }
+                for permission in role.permissions
+            ],
+        }
+        for role in roles
+    ]
+
+
+@router.get(
+    "/permissions",
+    dependencies=[Depends(require_permission("permission.read"))],
+)
+def list_permissions(db: DBSession):
+    permissions = (
+        db.query(Permission)
+        .order_by(Permission.name)
+        .all()
+    )
+
+    return [
+        {
+            "id": permission.id,
+            "name": permission.name,
+            "description": permission.description,
+        }
+        for permission in permissions
+    ]
+
+
+@router.get(
+    "/users",
+    dependencies=[Depends(require_permission("user.read"))],
+)
+def list_users(db: DBSession):
+    users = db.query(User).order_by(User.id).all()
+
+    return [
+        {
+            "id": user.id,
+            "email": user.email,
+            "roles": [
+                {
+                    "id": role.id,
+                    "name": role.name,
+                }
+                for role in user.roles
+            ],
+        }
+        for user in users
+    ]

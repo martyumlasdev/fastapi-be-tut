@@ -24,6 +24,8 @@ DEFAULT_ACTIONS = {
 RBAC_MANAGEMENT_PERMISSIONS = {
     "role_permission.assign",
     "user_role.assign",
+    "role.read",
+    "permission.read",
 }
 
 
